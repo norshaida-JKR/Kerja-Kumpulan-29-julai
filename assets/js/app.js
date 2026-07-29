@@ -236,4 +236,10 @@ document.addEventListener("input", (event) => {
   document.querySelectorAll(".data-table tbody tr").forEach(row => row.hidden = !row.textContent.toLowerCase().includes(query));
 });
 window.addEventListener("hashchange", route);
+const connectionStatus = document.querySelector("#connectionStatus div");
+if (window.ASET_CONFIG.API_URL && !window.ASET_CONFIG.USE_DEMO_DATA) {
+  connectionStatus.innerHTML = "<strong>Google Sheets disambungkan</strong><small>Data langsung aktif</small>";
+} else {
+  connectionStatus.innerHTML = "<strong>Mod demo aktif</strong><small>Data pelayar ini sahaja</small>";
+}
 route();
