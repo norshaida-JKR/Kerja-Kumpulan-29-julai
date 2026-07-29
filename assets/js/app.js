@@ -89,13 +89,13 @@ function recordFields(prefix, types) {
 }
 
 const defaultDashboard = {
-  total: 173,
-  functioning: 142,
-  damaged: 10,
-  maintenance: 11,
-  calibrationDue: 10,
-  calibrationExpired: 3,
-  pendingDisposals: 1,
+  total: 0,
+  functioning: 0,
+  damaged: 0,
+  maintenance: 0,
+  calibrationDue: 0,
+  calibrationExpired: 0,
+  pendingDisposals: 0,
   recentCalibration: null,
 };
 
@@ -156,11 +156,63 @@ function bar(label, value, height) { return `<div class="bar-column"><span class
 function legend(label, value, color) { return `<div class="legend-row" style="--dot:${color}"><span>${label}</span><strong>${value}</strong></div>`; }
 function activity(icon, title, detail, time) { return `<div class="activity"><span class="activity-icon">${icon}</span><div><strong>${title}</strong><small>${detail}</small></div><time>${time}</time></div>`; }
 
-function renderModule(moduleKey) {
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? escapeHtml(value)
+    : new Intl.DateTimeFormat("ms-MY", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+}
+
+function rowsFromApi(moduleKey, records) {
+  const rowMap = {
+    assets: (a) => [
+      escapeHtml(a.asset_id),
+      `<div class="asset-name"><strong>${escapeHtml(a.asset_name)}</strong><small>${escapeHtml(a.equipment_tag || "Tiada tag")} · ${escapeHtml(a.brand_model || "Tiada model")}</small></div>`,
+      escapeHtml(a.current_location || "—"),
+      badge(a.asset_status || "Belum ditetapkan"),
+      "—",
+      `<button class="link" data-toast="Profil ${escapeHtml(a.asset_id)} akan dibuka">Lihat profil →</button>`,
+    ],
+    maintenance: (r) => [escapeHtml(r.maintenance_id), escapeHtml(r.asset_id), formatDate(r.maintenance_date), escapeHtml(r.work_type), escapeHtml(r.vendor || "—"), r.cost ? `RM ${Number(r.cost).toLocaleString("ms-MY", { minimumFractionDigits: 2 })}` : "—", badge(r.status || "Baharu")],
+    calibration: (r) => {
+      const due = r.next_calibration_date ? new Date(r.next_calibration_date) : null;
+      const status = due && due < new Date() ? "Tamat tempoh" : r.result || "Direkodkan";
+      return [escapeHtml(r.calibration_id), escapeHtml(r.asset_id), formatDate(r.calibration_date), escapeHtml(r.result || "—"), r.certificate_url ? `<a class="link" href="${escapeHtml(r.certificate_url)}" target="_blank" rel="noopener">Buka sijil</a>` : "—", formatDate(r.next_calibration_date), badge(status)];
+    },
+    movements: (r) => [escapeHtml(r.movement_id), escapeHtml(r.asset_id), escapeHtml(r.from_location), escapeHtml(r.to_location), formatDate(r.movement_date), escapeHtml(r.received_by || "—"), badge(r.status || "Dalam proses")],
+    usage: (r) => [escapeHtml(r.usage_id), escapeHtml(r.asset_id), escapeHtml(r.user_name), escapeHtml(r.purpose), formatDate(r.check_out), formatDate(r.check_in), badge(r.check_in ? "Dipulangkan" : "Sedang digunakan")],
+    disposals: (r) => [escapeHtml(r.disposal_id), escapeHtml(r.asset_id), escapeHtml(r.reason), escapeHtml(r.method), formatDate(r.request_date), badge(r.approval_status || "Menunggu kelulusan"), r.document_url ? `<a class="link" href="${escapeHtml(r.document_url)}" target="_blank" rel="noopener">Buka</a>` : "—"],
+    manuals: (r) => [escapeHtml(r.manual_id), escapeHtml(r.manual_name), escapeHtml(r.model_category), escapeHtml(r.version || "—"), "—", formatDate(r.updated_at), r.drive_url ? `<a class="link" href="${escapeHtml(r.drive_url)}" target="_blank" rel="noopener">Buka PDF →</a>` : "—"],
+  };
+  return records.map(rowMap[moduleKey]);
+}
+
+function renderModule(moduleKey, apiRecords = null) {
   const m = modules[moduleKey];
+  let rows = m.rows;
+  if (apiRecords) {
+    rows = window.ASET_CONFIG.USE_DEMO_DATA && apiRecords.length === 0
+      ? m.rows
+      : rowsFromApi(moduleKey, apiRecords);
+  }
+  const tableBody = apiRecords === null
+    ? `<tr><td colspan="${m.columns.length}"><div class="empty-state">Memuat data daripada Google Sheets...</div></td></tr>`
+    : rows.length
+      ? rows.map(row => `<tr>${row.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")
+      : `<tr><td colspan="${m.columns.length}"><div class="empty-state">Belum ada rekod dalam Google Sheets.</div></td></tr>`;
   return `<div class="hero"><div><p class="eyebrow">${m.eyebrow}</p><h2>${m.heading}</h2><p>${m.description}</p></div><button class="button" data-open-form="${moduleKey}">＋ ${m.button}</button></div>
     <div class="module-toolbar"><label class="search-field"><span>⌕</span><input class="table-search" type="search" placeholder="Cari dalam modul ini..."></label><select class="filter-select"><option>Semua status</option><option>Berfungsi</option><option>Perlu tindakan</option></select><button class="button secondary" data-toast="Fungsi eksport tersedia selepas Google Sheets disambung">⇩ Eksport</button></div>
-    <section class="panel table-panel"><table class="data-table"><thead><tr>${m.columns.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${m.rows.map(row => `<tr>${row.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></section>`;
+    <section class="panel table-panel"><table class="data-table"><thead><tr>${m.columns.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${tableBody}</tbody></table></section>`;
 }
 
 function makeForm(moduleKey) {
@@ -193,6 +245,15 @@ async function route() {
       }
     } catch (error) {
       toast(`Dashboard tidak dapat dikemas kini: ${error.message}`);
+    }
+  } else {
+    try {
+      const response = await AssetAPI.request(`list_${validRoute}`);
+      if (location.hash.replace("#", "") === validRoute) {
+        document.querySelector("#app").innerHTML = renderModule(validRoute, response.data || []);
+      }
+    } catch (error) {
+      toast(`${modules[validRoute].title} tidak dapat dimuatkan: ${error.message}`);
     }
   }
 }
