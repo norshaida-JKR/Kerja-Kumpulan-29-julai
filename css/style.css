@@ -1,0 +1,285 @@
+/* ============================================================
+   Sistem Pengurusan Aset — Stylesheet Utama
+   Semua halaman/modul import fail ini supaya rupa konsisten.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+
+:root {
+  --navy: #17324A;
+  --navy-2: #1F425F;
+  --slate: #55697C;
+  --bg: #EEF2F5;
+  --card: #FFFFFF;
+  --line: #DCE3E9;
+  --text: #1B2733;
+  --text-soft: #5B6B78;
+
+  --ok: #1E8E77;
+  --ok-bg: #E4F5F0;
+  --warn: #C08A2E;
+  --warn-bg: #FBF1DF;
+  --danger: #B33F32;
+  --danger-bg: #FBEAE7;
+
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(23, 50, 74, 0.06), 0 4px 16px rgba(23, 50, 74, 0.06);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Header ---------- */
+.topbar {
+  background: var(--navy);
+  color: #fff;
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar .tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  background: rgba(255,255,255,0.12);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.topbar h1 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.topbar nav a {
+  color: rgba(255,255,255,0.82);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 20px;
+}
+.topbar nav a:hover { color: #fff; }
+
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+.page-subtitle {
+  color: var(--text-soft);
+  margin: 0 0 28px;
+  font-size: 14.5px;
+}
+
+/* ---------- Stat cards (dashboard) ---------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+
+.stat-card .label {
+  font-size: 12.5px;
+  color: var(--text-soft);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-card .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 30px;
+  font-weight: 600;
+  margin-top: 6px;
+  color: var(--navy);
+}
+
+.stat-card.ok .value { color: var(--ok); }
+.stat-card.danger .value { color: var(--danger); }
+
+/* ---------- Module cards ---------- */
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px;
+}
+
+.module-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  text-decoration: none;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.module-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--navy-2);
+}
+
+.module-card .num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-soft);
+  letter-spacing: 0.08em;
+}
+
+.module-card h3 {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 700;
+}
+
+.module-card p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.module-card .owner {
+  margin-top: auto;
+  font-size: 12px;
+  color: var(--navy-2);
+  font-weight: 600;
+}
+
+/* ---------- Forms ---------- */
+.form-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  max-width: 620px;
+}
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  background: #FCFDFE;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: 2px solid var(--navy-2);
+  outline-offset: 1px;
+}
+
+button.btn {
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.btn:hover { background: var(--navy-2); }
+
+/* ---------- Status tags & messages ---------- */
+.tag-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  background: #EEF2F5;
+  border: 1px solid var(--line);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.badge.ok { background: var(--ok-bg); color: var(--ok); }
+.badge.warn { background: var(--warn-bg); color: var(--warn); }
+.badge.danger { background: var(--danger-bg); color: var(--danger); }
+
+.status-msg {
+  margin-top: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.status-ok { color: var(--ok); }
+.status-error { color: var(--danger); }
+
+/* ---------- Table ---------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+th, td {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--line);
+}
+th {
+  background: #F5F8FA;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 640px) {
+  main { padding: 24px 16px 48px; }
+  .topbar { padding: 14px 18px; }
+}

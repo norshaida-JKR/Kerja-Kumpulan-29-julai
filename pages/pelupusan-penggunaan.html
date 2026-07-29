@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pelupusan & Rekod Penggunaan</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>Sistem Pengurusan Aset</h1>
+      <span class="tag">MODUL 04</span>
+    </div>
+    <nav>
+      <a href="../index.html">Dashboard</a>
+      <a href="pendaftaran.html">Pendaftaran</a>
+      <a href="status-penempatan.html">Status &amp; Penempatan</a>
+      <a href="penyelenggaraan.html">Penyelenggaraan</a>
+      <a href="pelupusan-penggunaan.html">Pelupusan</a>
+      <a href="manual-dashboard.html">Manual Operation</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 class="page-title">Pelupusan Aset</h2>
+    <p class="page-subtitle">Rekod aset yang telah diluluskan untuk dilupuskan.</p>
+
+    <div class="form-card">
+      <form id="formPelupusan">
+        <div class="field">
+          <label for="idAsetLupus">ID Aset</label>
+          <input type="text" id="idAsetLupus" required placeholder="Cth: AST-0001">
+        </div>
+        <div class="field">
+          <label for="sebab">Sebab Pelupusan</label>
+          <input type="text" id="sebab" required placeholder="Cth: Rosak tidak ekonomik dibaiki">
+        </div>
+        <div class="field">
+          <label for="noKelulusan">No. Kelulusan</label>
+          <input type="text" id="noKelulusan" required>
+        </div>
+        <button type="submit" class="btn">Rekod Pelupusan</button>
+        <div id="statusMsg1" class="status-msg"></div>
+      </form>
+    </div>
+
+    <h2 class="page-title" style="font-size:19px; margin-top:32px;">Rekod Penggunaan Aset</h2>
+    <p class="page-subtitle">Log harian penggunaan aset.</p>
+
+    <div class="form-card">
+      <form id="formPenggunaan">
+        <div class="field">
+          <label for="idAsetGuna">ID Aset</label>
+          <input type="text" id="idAsetGuna" required placeholder="Cth: AST-0001">
+        </div>
+        <div class="field">
+          <label for="pengguna">Pengguna</label>
+          <input type="text" id="pengguna" required>
+        </div>
+        <div class="field">
+          <label for="tujuan">Tujuan</label>
+          <input type="text" id="tujuan" required>
+        </div>
+        <button type="submit" class="btn">Rekod Penggunaan</button>
+        <div id="statusMsg2" class="status-msg"></div>
+      </form>
+    </div>
+
+    <h2 class="page-title" style="font-size:19px; margin-top:32px;">Senarai Aset Dilupuskan</h2>
+    <table>
+      <thead><tr><th>ID Aset</th><th>Tarikh Lulus</th><th>Sebab</th><th>No. Kelulusan</th></tr></thead>
+      <tbody id="tblPelupusan"><tr><td colspan="4">Memuatkan...</td></tr></tbody>
+    </table>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script>
+    document.getElementById('formPelupusan').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const record = {
+        IDAset: document.getElementById('idAsetLupus').value.trim(),
+        TarikhLulus: new Date().toISOString().slice(0, 10),
+        Sebab: document.getElementById('sebab').value.trim(),
+        NoKelulusan: document.getElementById('noKelulusan').value.trim()
+      };
+      const msgEl = document.getElementById('statusMsg1');
+      try {
+        await postData('Pelupusan', record);
+        showStatus(msgEl, 'Rekod pelupusan berjaya disimpan.', 'ok');
+        e.target.reset();
+        loadPelupusan();
+      } catch (err) {
+        showStatus(msgEl, 'Gagal: ' + err.message, 'error');
+      }
+    });
+
+    document.getElementById('formPenggunaan').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const record = {
+        IDAset: document.getElementById('idAsetGuna').value.trim(),
+        TarikhGuna: new Date().toISOString().slice(0, 10),
+        Pengguna: document.getElementById('pengguna').value.trim(),
+        Tujuan: document.getElementById('tujuan').value.trim()
+      };
+      const msgEl = document.getElementById('statusMsg2');
+      try {
+        await postData('Penggunaan', record);
+        showStatus(msgEl, 'Rekod penggunaan berjaya disimpan.', 'ok');
+        e.target.reset();
+      } catch (err) {
+        showStatus(msgEl, 'Gagal: ' + err.message, 'error');
+      }
+    });
+
+    async function loadPelupusan() {
+      const tbody = document.getElementById('tblPelupusan');
+      try {
+        const rows = await getData('Pelupusan');
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4">Tiada rekod lagi.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows.map(r => `
+          <tr>
+            <td><span class="tag-id">${r.IDAset}</span></td>
+            <td>${r.TarikhLulus}</td>
+            <td>${r.Sebab}</td>
+            <td>${r.NoKelulusan}</td>
+          </tr>`).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4">Ralat: ${err.message}</td></tr>`;
+      }
+    }
+    loadPelupusan();
+  </script>
+
+</body>
+</html>

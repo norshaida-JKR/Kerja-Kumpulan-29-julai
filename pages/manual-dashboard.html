@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual Operation</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>Sistem Pengurusan Aset</h1>
+      <span class="tag">MODUL 05</span>
+    </div>
+    <nav>
+      <a href="../index.html">Dashboard</a>
+      <a href="pendaftaran.html">Pendaftaran</a>
+      <a href="status-penempatan.html">Status &amp; Penempatan</a>
+      <a href="penyelenggaraan.html">Penyelenggaraan</a>
+      <a href="pelupusan-penggunaan.html">Pelupusan</a>
+      <a href="manual-dashboard.html">Manual Operation</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 class="page-title">Manual Operation Aset</h2>
+    <p class="page-subtitle">Pautkan manual operasi (link fail/dokumen) kepada ID Aset berkenaan.</p>
+
+    <div class="form-card">
+      <form id="formManual">
+        <div class="field">
+          <label for="idAset">ID Aset</label>
+          <input type="text" id="idAset" required placeholder="Cth: AST-0001">
+        </div>
+        <div class="field">
+          <label for="link">Link Manual (Google Drive / URL)</label>
+          <input type="url" id="link" required placeholder="https://drive.google.com/...">
+        </div>
+        <div class="field">
+          <label for="versi">Versi</label>
+          <input type="text" id="versi" placeholder="Cth: v1.0">
+        </div>
+        <button type="submit" class="btn">Pautkan Manual</button>
+        <div id="statusMsg" class="status-msg"></div>
+      </form>
+    </div>
+
+    <h2 class="page-title" style="font-size:19px; margin-top:32px;">Cari Semua Rekod Aset (Semua Modul)</h2>
+    <p class="page-subtitle">Masukkan ID Aset untuk lihat sejarah penuh — pendaftaran, status, servis, pergerakan &amp; manual.</p>
+    <div class="form-card">
+      <div class="field">
+        <label for="cariId">ID Aset</label>
+        <input type="text" id="cariId" placeholder="Cth: AST-0001">
+      </div>
+      <button class="btn" id="btnCari">Cari</button>
+    </div>
+
+    <div id="hasilCarian" style="margin-top:20px;"></div>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script>
+    document.getElementById('formManual').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const record = {
+        IDAset: document.getElementById('idAset').value.trim(),
+        LinkManual: document.getElementById('link').value.trim(),
+        Versi: document.getElementById('versi').value.trim() || 'v1.0'
+      };
+      const msgEl = document.getElementById('statusMsg');
+      try {
+        await postData('ManualOperation', record);
+        showStatus(msgEl, 'Manual berjaya dipautkan kepada aset.', 'ok');
+        e.target.reset();
+      } catch (err) {
+        showStatus(msgEl, 'Gagal: ' + err.message, 'error');
+      }
+    });
+
+    document.getElementById('btnCari').addEventListener('click', async () => {
+      const id = document.getElementById('cariId').value.trim();
+      const hasil = document.getElementById('hasilCarian');
+      if (!id) return;
+      hasil.innerHTML = 'Mencari...';
+
+      try {
+        const [aset, status, servis, manual, pergerakan] = await Promise.all([
+          getData('SenaraiAset', id),
+          getData('StatusAset', id),
+          getData('Penyelenggaraan', id),
+          getData('ManualOperation', id),
+          getData('Pergerakan', id)
+        ]);
+
+        if (aset.length === 0) {
+          hasil.innerHTML = '<p>Tiada aset dijumpai dengan ID tersebut.</p>';
+          return;
+        }
+
+        const a = aset[0];
+        hasil.innerHTML = `
+          <div class="form-card">
+            <h3>${a.Nama} <span class="tag-id">${a.IDAset}</span></h3>
+            <p><strong>Kategori:</strong> ${a.Kategori} &nbsp; | &nbsp; <strong>Lokasi:</strong> ${a.LokasiSemasa}</p>
+            <p><strong>Manual Operation:</strong> ${
+              manual.length ? manual.map(m => `<a href="${m.LinkManual}" target="_blank">${m.Versi || 'Manual'}</a>`).join(', ')
+                            : 'Belum dipautkan'
+            }</p>
+            <p><strong>Status Terkini:</strong> ${status.length ? status[status.length - 1].Status : 'Belum direkod'}</p>
+            <p><strong>Bilangan Rekod Servis:</strong> ${servis.length}</p>
+            <p><strong>Bilangan Pergerakan:</strong> ${pergerakan.length}</p>
+          </div>
+        `;
+      } catch (err) {
+        hasil.innerHTML = `<p>Ralat: ${err.message}</p>`;
+      }
+    });
+  </script>
+
+</body>
+</html>

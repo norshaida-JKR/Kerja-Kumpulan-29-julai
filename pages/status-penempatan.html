@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status, Penempatan & Pergerakan Aset</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>Sistem Pengurusan Aset</h1>
+      <span class="tag">MODUL 02</span>
+    </div>
+    <nav>
+      <a href="../index.html">Dashboard</a>
+      <a href="pendaftaran.html">Pendaftaran</a>
+      <a href="status-penempatan.html">Status &amp; Penempatan</a>
+      <a href="penyelenggaraan.html">Penyelenggaraan</a>
+      <a href="pelupusan-penggunaan.html">Pelupusan</a>
+      <a href="manual-dashboard.html">Manual Operation</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 class="page-title">Kemaskini Status Aset</h2>
+    <p class="page-subtitle">Tandakan aset sebagai Berfungsi atau Rosak.</p>
+
+    <div class="form-card">
+      <form id="formStatus">
+        <div class="field">
+          <label for="idAsetStatus">ID Aset</label>
+          <input type="text" id="idAsetStatus" required placeholder="Cth: AST-0001">
+        </div>
+        <div class="field">
+          <label for="status">Status</label>
+          <select id="status" required>
+            <option value="Berfungsi">Berfungsi</option>
+            <option value="Rosak">Rosak</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="catatan">Catatan</label>
+          <textarea id="catatan" rows="2" placeholder="Cth: Skrin retak"></textarea>
+        </div>
+        <button type="submit" class="btn">Kemaskini Status</button>
+        <div id="statusMsg1" class="status-msg"></div>
+      </form>
+    </div>
+
+    <h2 class="page-title" style="font-size:19px; margin-top:32px;">Rekod Pergerakan Aset</h2>
+    <p class="page-subtitle">Rekod aset yang dipindah dari satu lokasi ke lokasi lain.</p>
+
+    <div class="form-card">
+      <form id="formPergerakan">
+        <div class="field">
+          <label for="idAsetGerak">ID Aset</label>
+          <input type="text" id="idAsetGerak" required placeholder="Cth: AST-0001">
+        </div>
+        <div class="field">
+          <label for="dari">Dari (Lokasi)</label>
+          <input type="text" id="dari" required>
+        </div>
+        <div class="field">
+          <label for="ke">Ke (Lokasi)</label>
+          <input type="text" id="ke" required>
+        </div>
+        <div class="field">
+          <label for="diluluskan">Diluluskan Oleh</label>
+          <input type="text" id="diluluskan" required>
+        </div>
+        <button type="submit" class="btn">Rekod Pergerakan</button>
+        <div id="statusMsg2" class="status-msg"></div>
+      </form>
+    </div>
+
+    <h2 class="page-title" style="font-size:19px; margin-top:32px;">Sejarah Status</h2>
+    <table>
+      <thead><tr><th>ID Aset</th><th>Status</th><th>Tarikh Kemaskini</th><th>Catatan</th></tr></thead>
+      <tbody id="tblStatus"><tr><td colspan="4">Memuatkan...</td></tr></tbody>
+    </table>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script>
+    document.getElementById('formStatus').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const record = {
+        IDAset: document.getElementById('idAsetStatus').value.trim(),
+        Status: document.getElementById('status').value,
+        TarikhKemaskini: new Date().toISOString().slice(0, 10),
+        Catatan: document.getElementById('catatan').value.trim()
+      };
+      const msgEl = document.getElementById('statusMsg1');
+      try {
+        await postData('StatusAset', record);
+        showStatus(msgEl, 'Status berjaya dikemaskini.', 'ok');
+        e.target.reset();
+        loadStatus();
+      } catch (err) {
+        showStatus(msgEl, 'Gagal: ' + err.message, 'error');
+      }
+    });
+
+    document.getElementById('formPergerakan').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const record = {
+        IDAset: document.getElementById('idAsetGerak').value.trim(),
+        Dari: document.getElementById('dari').value.trim(),
+        Ke: document.getElementById('ke').value.trim(),
+        Tarikh: new Date().toISOString().slice(0, 10),
+        DiluluskanOleh: document.getElementById('diluluskan').value.trim()
+      };
+      const msgEl = document.getElementById('statusMsg2');
+      try {
+        await postData('Pergerakan', record);
+        showStatus(msgEl, 'Pergerakan aset berjaya direkod.', 'ok');
+        e.target.reset();
+      } catch (err) {
+        showStatus(msgEl, 'Gagal: ' + err.message, 'error');
+      }
+    });
+
+    async function loadStatus() {
+      const tbody = document.getElementById('tblStatus');
+      try {
+        const rows = await getData('StatusAset');
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4">Tiada rekod lagi.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows.map(r => {
+          const badgeClass = String(r.Status).toLowerCase() === 'berfungsi' ? 'ok' : 'danger';
+          return `<tr>
+            <td><span class="tag-id">${r.IDAset}</span></td>
+            <td><span class="badge ${badgeClass}">${r.Status}</span></td>
+            <td>${r.TarikhKemaskini}</td>
+            <td>${r.Catatan || ''}</td>
+          </tr>`;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4">Ralat: ${err.message}</td></tr>`;
+      }
+    }
+    loadStatus();
+  </script>
+
+</body>
+</html>

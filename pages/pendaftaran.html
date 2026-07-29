@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pendaftaran & Senarai Aset</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>Sistem Pengurusan Aset</h1>
+      <span class="tag">MODUL 01</span>
+    </div>
+    <nav>
+      <a href="../index.html">Dashboard</a>
+      <a href="pendaftaran.html">Pendaftaran</a>
+      <a href="status-penempatan.html">Status &amp; Penempatan</a>
+      <a href="penyelenggaraan.html">Penyelenggaraan</a>
+      <a href="pelupusan-penggunaan.html">Pelupusan</a>
+      <a href="manual-dashboard.html">Manual Operation</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 class="page-title">Pendaftaran &amp; Senarai Aset</h2>
+    <p class="page-subtitle">Daftar aset baru — No. Pendaftaran (ID Aset) dijana automatik.</p>
+
+    <div class="form-card">
+      <form id="formDaftar">
+        <div class="field">
+          <label for="nama">Nama Aset</label>
+          <input type="text" id="nama" required placeholder="Cth: Komputer Riba Dell">
+        </div>
+        <div class="field">
+          <label for="kategori">Kategori</label>
+          <input type="text" id="kategori" required placeholder="Cth: ICT, Perabot, Kenderaan">
+        </div>
+        <div class="field">
+          <label for="lokasi">Lokasi Semasa</label>
+          <input type="text" id="lokasi" required placeholder="Cth: Pejabat Daerah Alor Gajah">
+        </div>
+        <button type="submit" class="btn">Daftar Aset</button>
+        <div id="statusMsg" class="status-msg"></div>
+      </form>
+    </div>
+
+    <h2 class="page-title" style="font-size:19px; margin-top:32px;">Senarai Aset</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID Aset</th>
+          <th>Nama</th>
+          <th>Kategori</th>
+          <th>Tarikh Daftar</th>
+          <th>Lokasi</th>
+        </tr>
+      </thead>
+      <tbody id="tblSenarai">
+        <tr><td colspan="5">Memuatkan...</td></tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script>
+    const form = document.getElementById('formDaftar');
+    const statusMsg = document.getElementById('statusMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const record = {
+        Nama: document.getElementById('nama').value.trim(),
+        Kategori: document.getElementById('kategori').value.trim(),
+        TarikhDaftar: new Date().toISOString().slice(0, 10),
+        StatusSemasa: 'Berfungsi',
+        LokasiSemasa: document.getElementById('lokasi').value.trim()
+      };
+
+      try {
+        const result = await postData('SenaraiAset', record);
+        showStatus(statusMsg, `Berjaya! ID Aset baru: ${result.idAset}`, 'ok');
+        form.reset();
+        loadSenarai();
+      } catch (err) {
+        showStatus(statusMsg, 'Gagal daftar aset: ' + err.message, 'error');
+      }
+    });
+
+    async function loadSenarai() {
+      const tbody = document.getElementById('tblSenarai');
+      try {
+        const rows = await getData('SenaraiAset');
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">Tiada aset didaftarkan lagi.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows.map(r => `
+          <tr>
+            <td><span class="tag-id">${r.IDAset}</span></td>
+            <td>${r.Nama}</td>
+            <td>${r.Kategori}</td>
+            <td>${r.TarikhDaftar}</td>
+            <td>${r.LokasiSemasa}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5">Ralat memuatkan data: ${err.message}</td></tr>`;
+      }
+    }
+    loadSenarai();
+  </script>
+
+</body>
+</html>

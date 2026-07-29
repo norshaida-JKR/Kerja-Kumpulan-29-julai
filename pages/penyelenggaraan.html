@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penyelenggaraan & Kalibrasi</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>Sistem Pengurusan Aset</h1>
+      <span class="tag">MODUL 03</span>
+    </div>
+    <nav>
+      <a href="../index.html">Dashboard</a>
+      <a href="pendaftaran.html">Pendaftaran</a>
+      <a href="status-penempatan.html">Status &amp; Penempatan</a>
+      <a href="penyelenggaraan.html">Penyelenggaraan</a>
+      <a href="pelupusan-penggunaan.html">Pelupusan</a>
+      <a href="manual-dashboard.html">Manual Operation</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 class="page-title">Rekod Penyelenggaraan &amp; Kalibrasi</h2>
+    <p class="page-subtitle">Catat setiap servis, penyelenggaraan berkala atau kalibrasi bagi sesuatu aset.</p>
+
+    <div class="form-card">
+      <form id="formServis">
+        <div class="field">
+          <label for="idAset">ID Aset</label>
+          <input type="text" id="idAset" required placeholder="Cth: AST-0001">
+        </div>
+        <div class="field">
+          <label for="jenis">Jenis</label>
+          <select id="jenis" required>
+            <option value="Penyelenggaraan">Penyelenggaraan</option>
+            <option value="Kalibrasi">Kalibrasi</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="vendor">Vendor / Dijalankan Oleh</label>
+          <input type="text" id="vendor" required>
+        </div>
+        <div class="field">
+          <label for="kos">Kos (RM)</label>
+          <input type="number" id="kos" step="0.01" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label for="nota">Nota</label>
+          <textarea id="nota" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn">Simpan Rekod</button>
+        <div id="statusMsg" class="status-msg"></div>
+      </form>
+    </div>
+
+    <h2 class="page-title" style="font-size:19px; margin-top:32px;">Sejarah Penyelenggaraan &amp; Kalibrasi</h2>
+    <table>
+      <thead><tr><th>ID Aset</th><th>Tarikh</th><th>Jenis</th><th>Vendor</th><th>Kos (RM)</th></tr></thead>
+      <tbody id="tblServis"><tr><td colspan="5">Memuatkan...</td></tr></tbody>
+    </table>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script>
+    document.getElementById('formServis').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const record = {
+        IDAset: document.getElementById('idAset').value.trim(),
+        TarikhServis: new Date().toISOString().slice(0, 10),
+        Jenis: document.getElementById('jenis').value,
+        Vendor: document.getElementById('vendor').value.trim(),
+        Kos: document.getElementById('kos').value || 0,
+        Nota: document.getElementById('nota').value.trim()
+      };
+      const msgEl = document.getElementById('statusMsg');
+      try {
+        await postData('Penyelenggaraan', record);
+        showStatus(msgEl, 'Rekod berjaya disimpan.', 'ok');
+        e.target.reset();
+        loadServis();
+      } catch (err) {
+        showStatus(msgEl, 'Gagal: ' + err.message, 'error');
+      }
+    });
+
+    async function loadServis() {
+      const tbody = document.getElementById('tblServis');
+      try {
+        const rows = await getData('Penyelenggaraan');
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">Tiada rekod lagi.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows.map(r => `
+          <tr>
+            <td><span class="tag-id">${r.IDAset}</span></td>
+            <td>${r.TarikhServis}</td>
+            <td>${r.Jenis}</td>
+            <td>${r.Vendor}</td>
+            <td>${r.Kos}</td>
+          </tr>`).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5">Ralat: ${err.message}</td></tr>`;
+      }
+    }
+    loadServis();
+  </script>
+
+</body>
+</html>

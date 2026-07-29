@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistem Pengurusan Aset</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>Sistem Pengurusan Aset</h1>
+      <span class="tag">KUMPULAN 29 JULAI</span>
+    </div>
+    <nav>
+      <a href="index.html">Dashboard</a>
+      <a href="pages/pendaftaran.html">Pendaftaran</a>
+      <a href="pages/status-penempatan.html">Status &amp; Penempatan</a>
+      <a href="pages/penyelenggaraan.html">Penyelenggaraan</a>
+      <a href="pages/pelupusan-penggunaan.html">Pelupusan</a>
+      <a href="pages/manual-dashboard.html">Manual Operation</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 class="page-title">Ringkasan Aset</h2>
+    <p class="page-subtitle">Papan pemuka keseluruhan aset — data ditarik terus dari Google Sheets.</p>
+
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-card">
+        <div class="label">Jumlah Aset</div>
+        <div class="value" id="statTotal">—</div>
+      </div>
+      <div class="stat-card ok">
+        <div class="label">Berfungsi</div>
+        <div class="value" id="statBerfungsi">—</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="label">Rosak</div>
+        <div class="value" id="statRosak">—</div>
+      </div>
+    </div>
+
+    <h2 class="page-title" style="font-size:19px; margin-top: 8px;">Modul</h2>
+    <div class="module-grid">
+
+      <a class="module-card" href="pages/pendaftaran.html">
+        <span class="num">MODUL 01</span>
+        <h3>Pendaftaran &amp; Senarai Aset</h3>
+        <p>Daftar aset baru, jana no. pendaftaran automatik, papar senarai penuh aset.</p>
+        <span class="owner">Ahli 1</span>
+      </a>
+
+      <a class="module-card" href="pages/status-penempatan.html">
+        <span class="num">MODUL 02</span>
+        <h3>Status, Penempatan &amp; Pergerakan</h3>
+        <p>Kemaskini status berfungsi/rosak, rekod penempatan &amp; pergerakan aset antara lokasi.</p>
+        <span class="owner">Ahli 2</span>
+      </a>
+
+      <a class="module-card" href="pages/penyelenggaraan.html">
+        <span class="num">MODUL 03</span>
+        <h3>Penyelenggaraan &amp; Kalibrasi</h3>
+        <p>Rekod servis, penyelenggaraan berkala dan kalibrasi bagi setiap aset.</p>
+        <span class="owner">Ahli 3</span>
+      </a>
+
+      <a class="module-card" href="pages/pelupusan-penggunaan.html">
+        <span class="num">MODUL 04</span>
+        <h3>Pelupusan &amp; Rekod Penggunaan</h3>
+        <p>Proses pelupusan aset dan log penggunaan harian aset.</p>
+        <span class="owner">Ahli 4</span>
+      </a>
+
+      <a class="module-card" href="pages/manual-dashboard.html">
+        <span class="num">MODUL 05</span>
+        <h3>Manual Operation</h3>
+        <p>Pautkan manual operasi kepada aset dan lihat semula ringkasan keseluruhan sistem.</p>
+        <span class="owner">Ahli 5</span>
+      </a>
+
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function loadDashboard() {
+      try {
+        const aset = await getData('SenaraiAset');
+        document.getElementById('statTotal').textContent = aset.length;
+
+        const statusRows = await getData('StatusAset');
+        // Ambil status TERKINI bagi setiap aset (rekod terakhir dalam senarai)
+        const latestStatus = {};
+        statusRows.forEach(row => { latestStatus[row.IDAset] = row.Status; });
+
+        const nilai = Object.values(latestStatus);
+        const berfungsi = nilai.filter(s => String(s).toLowerCase() === 'berfungsi').length;
+        const rosak = nilai.filter(s => String(s).toLowerCase() === 'rosak').length;
+
+        document.getElementById('statBerfungsi').textContent = berfungsi;
+        document.getElementById('statRosak').textContent = rosak;
+      } catch (err) {
+        document.getElementById('statTotal').textContent = '—';
+        console.error(err);
+        // BASE_URL dalam js/api.js mungkin belum ditetapkan lagi
+      }
+    }
+    loadDashboard();
+  </script>
+
+</body>
+</html>
