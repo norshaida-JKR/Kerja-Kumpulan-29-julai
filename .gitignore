@@ -1,0 +1,8 @@
+node_modules/
+.env
+.DS_Store
+Thumbs.db
+outputs/
+tools/previews/
+*.inspect.ndjson
+EQUIPMENT MASTERLIST AND CALIBRATION RECORDS- MASTER SHJ.xlsx

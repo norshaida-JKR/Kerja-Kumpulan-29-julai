@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ms">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Sistem pengurusan aset MPE untuk pendaftaran, penyelenggaraan, kalibrasi, pergerakan, penggunaan, pelupusan dan manual operasi."
+    />
+    <title>ASET MPE — Sistem Pengurusan Aset</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#dashboard" aria-label="ASET MPE">
+          <span class="brand-mark">AM</span>
+          <span><strong>ASET MPE</strong><small>Pusat Rekod Aset</small></span>
+        </a>
+
+        <nav class="main-nav" aria-label="Navigasi utama">
+          <a href="#dashboard" data-route="dashboard" class="active"><span>⌂</span> Dashboard</a>
+          <p>Pengurusan aset</p>
+          <a href="#assets" data-route="assets"><span>▦</span> Daftar Aset</a>
+          <a href="#maintenance" data-route="maintenance"><span>⌁</span> Penyelenggaraan</a>
+          <a href="#calibration" data-route="calibration"><span>◎</span> Kalibrasi</a>
+          <a href="#movements" data-route="movements"><span>⇄</span> Pergerakan</a>
+          <a href="#usage" data-route="usage"><span>◷</span> Penggunaan</a>
+          <a href="#disposals" data-route="disposals"><span>♲</span> Pelupusan</a>
+          <a href="#manuals" data-route="manuals"><span>▤</span> Manual Operasi</a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <span class="status-dot"></span>
+          <div><strong>Sistem disambungkan</strong><small>Google Sheets API</small></div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <button class="icon-button menu-button" id="menuButton" aria-label="Buka menu">☰</button>
+          <div>
+            <p class="eyebrow">SISTEM PENGURUSAN ASET</p>
+            <h1 id="pageTitle">Dashboard</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="search-field">
+              <span>⌕</span>
+              <input id="globalSearch" type="search" placeholder="Cari aset, no. siri..." />
+            </label>
+            <button class="profile" aria-label="Profil pengguna">
+              <span>NS</span>
+              <span><strong>Staf MPE</strong><small>Pentadbir aset</small></span>
+            </button>
+          </div>
+        </header>
+
+        <section id="app" class="page" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="modal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <button class="modal-close" id="modalClose" aria-label="Tutup">×</button>
+        <p class="eyebrow">REKOD BAHARU</p>
+        <h2 id="modalTitle">Tambah rekod</h2>
+        <form id="recordForm" class="record-form"></form>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>
