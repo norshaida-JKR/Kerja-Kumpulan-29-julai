@@ -180,14 +180,23 @@ function getDashboard_() {
   const today = new Date();
   const in30Days = new Date(today.getTime() + 30 * 86400000);
   const calibrations = listRecords_("calibration");
+  const disposals = listRecords_("disposals");
+  const calibrationDue = calibrations.filter(function (item) {
+    const due = new Date(item.next_calibration_date);
+    return !isNaN(due) && due <= in30Days;
+  });
   return {
     total: assets.length,
     functioning: assets.filter(function (item) { return item.asset_status === "Berfungsi"; }).length,
     damaged: assets.filter(function (item) { return item.asset_status === "Rosak"; }).length,
     maintenance: assets.filter(function (item) { return item.asset_status === "Dalam Penyelenggaraan"; }).length,
-    calibrationDue: calibrations.filter(function (item) {
-      const due = new Date(item.next_calibration_date);
-      return !isNaN(due) && due <= in30Days;
+    calibrationDue: calibrationDue.length,
+    calibrationExpired: calibrationDue.filter(function (item) {
+      return new Date(item.next_calibration_date) < today;
     }).length,
+    pendingDisposals: disposals.filter(function (item) {
+      return item.approval_status === "Menunggu kelulusan";
+    }).length,
+    recentCalibration: calibrations.length ? calibrations[calibrations.length - 1] : null,
   };
 }

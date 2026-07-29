@@ -88,17 +88,39 @@ function recordFields(prefix, types) {
   return [["Aset", "asset_id", "select", demoAssets.map(a => `${a.id} — ${a.name}`)], ["Tarikh", `${prefix}_date`, "date"], ["Jenis kerja", "work_type", "select", types], ["Vendor / syarikat", "vendor"], ["Kos (RM)", "cost", "number"], ["Catatan", "notes", "textarea", [], true]];
 }
 
-function renderDashboard() {
+const defaultDashboard = {
+  total: 173,
+  functioning: 142,
+  damaged: 10,
+  maintenance: 11,
+  calibrationDue: 10,
+  calibrationExpired: 3,
+  pendingDisposals: 1,
+  recentCalibration: null,
+};
+
+function renderDashboard(stats = defaultDashboard) {
+  const attention = Number(stats.damaged || 0) + Number(stats.maintenance || 0);
+  const functioningRate = stats.total ? Math.round((stats.functioning / stats.total) * 100) : 0;
+  const today = new Intl.DateTimeFormat("ms-MY", {
+    day: "numeric", month: "long", year: "numeric",
+  }).format(new Date()).toUpperCase();
+  const sourceText = window.ASET_CONFIG.USE_DEMO_DATA
+    ? "Mod demo aktif. Rekod disimpan pada pelayar ini untuk ujian."
+    : "Data langsung daripada Google Sheets.";
+  const recentCalibration = stats.recentCalibration
+    ? activity("◎", "Kalibrasi baharu direkodkan", `${stats.recentCalibration.asset_id} · ${stats.recentCalibration.result}`, "Baru")
+    : activity("◎", "Sijil kalibrasi ditambah", "Digital Caliper · CAL-00018", "1 jam");
   return `
     <div class="hero">
-      <div><p class="eyebrow">RINGKASAN HARI INI · 29 JULAI 2026</p><h2>Pantau keadaan aset dan tindakan yang perlu dibuat.</h2><p>Data demo berdasarkan struktur fail master aset. Sambungkan Google Sheets untuk data sebenar.</p></div>
+      <div><p class="eyebrow">RINGKASAN HARI INI · ${today}</p><h2>Pantau keadaan aset dan tindakan yang perlu dibuat.</h2><p>${sourceText}</p></div>
       <button class="button" data-open-form="assets">＋ Daftar aset baharu</button>
     </div>
     <div class="kpi-grid">
-      ${kpi("Jumlah aset", "173", "▦", "Semua aset berdaftar", "#dff1eb")}
-      ${kpi("Berfungsi", "142", "✓", "<strong>82%</strong> daripada semua aset", "#dff1eb")}
-      ${kpi("Perlu perhatian", "21", "!", "Rosak atau diselenggara", "#fff1dd")}
-      ${kpi("Kalibrasi ≤ 30 hari", "10", "◎", "3 sudah tamat tempoh", "#fae9e9")}
+      ${kpi("Jumlah aset", stats.total, "▦", "Semua aset berdaftar", "#dff1eb")}
+      ${kpi("Berfungsi", stats.functioning, "✓", `<strong>${functioningRate}%</strong> daripada semua aset`, "#dff1eb")}
+      ${kpi("Perlu perhatian", attention, "!", "Rosak atau diselenggara", "#fff1dd")}
+      ${kpi("Kalibrasi ≤ 30 hari", stats.calibrationDue, "◎", `${stats.calibrationExpired || 0} sudah tamat tempoh`, "#fae9e9")}
     </div>
     <div class="dashboard-grid">
       <section class="panel"><div class="panel-header"><div><h3>Aset mengikut lokasi</h3><p>Taburan enam lokasi utama</p></div><a class="link" href="#assets">Lihat aset →</a></div>
@@ -107,22 +129,22 @@ function renderDashboard() {
         </div>
       </section>
       <section class="panel"><div class="panel-header"><div><h3>Status keseluruhan</h3><p>Keadaan semasa aset</p></div></div>
-        <div class="status-ring"><span>173<small>jumlah aset</small></span></div>
+        <div class="status-ring"><span>${stats.total}<small>jumlah aset</small></span></div>
         <div class="legend">
-          ${legend("Berfungsi", "142", "#176b55")}${legend("Penyelenggaraan", "21", "#c97816")}${legend("Rosak", "10", "#c24f4f")}
+          ${legend("Berfungsi", stats.functioning, "#176b55")}${legend("Penyelenggaraan", stats.maintenance, "#c97816")}${legend("Rosak", stats.damaged, "#c24f4f")}
         </div>
       </section>
       <section class="panel"><div class="panel-header"><div><h3>Aktiviti terkini</h3><p>Kemas kini daripada semua modul</p></div><button class="link" data-toast="Semua aktiviti akan dipaparkan selepas API disambung">Lihat semua</button></div>
         <div class="activity-list">
           ${activity("⇄", "Aset D.06 dipindahkan", "Store MPE → Diagnostic & Material Lab", "12 min")}
-          ${activity("◎", "Sijil kalibrasi ditambah", "Digital Caliper · CAL-00018", "1 jam")}
+          ${recentCalibration}
           ${activity("⌁", "Penyelenggaraan selesai", "Dust Test Chamber · MNT-00031", "3 jam")}
         </div>
       </section>
       <section class="panel"><div class="panel-header"><div><h3>Tindakan segera</h3><p>Keutamaan untuk pegawai aset</p></div></div>
         <div class="activity-list">
-          ${activity("!", "3 kalibrasi tamat tempoh", "Perlu jadualkan vendor", "Tinggi")}
-          ${activity("♲", "1 pelupusan menunggu", "Semakan dan kelulusan", "Sederhana")}
+          ${activity("!", `${stats.calibrationExpired || 0} kalibrasi tamat tempoh`, "Perlu jadualkan vendor", "Tinggi")}
+          ${activity("♲", `${stats.pendingDisposals || 0} pelupusan menunggu`, "Semakan dan kelulusan", "Sederhana")}
           ${activity("▤", "12 aset tiada manual", "Pautkan dokumen Drive", "Rendah")}
         </div>
       </section>
@@ -156,13 +178,23 @@ function makeForm(moduleKey) {
   document.querySelector("#recordForm input, #recordForm select")?.focus();
 }
 
-function route() {
+async function route() {
   const routeName = location.hash.replace("#", "") || "dashboard";
   const validRoute = routeName === "dashboard" || modules[routeName] ? routeName : "dashboard";
   document.querySelector("#pageTitle").textContent = validRoute === "dashboard" ? "Dashboard" : modules[validRoute].title;
   document.querySelector("#app").innerHTML = validRoute === "dashboard" ? renderDashboard() : renderModule(validRoute);
   document.querySelectorAll("[data-route]").forEach(a => a.classList.toggle("active", a.dataset.route === validRoute));
   document.querySelector("#sidebar").classList.remove("open");
+  if (validRoute === "dashboard") {
+    try {
+      const response = await AssetAPI.request("dashboard");
+      if ((location.hash.replace("#", "") || "dashboard") === "dashboard") {
+        document.querySelector("#app").innerHTML = renderDashboard(response.data);
+      }
+    } catch (error) {
+      toast(`Dashboard tidak dapat dikemas kini: ${error.message}`);
+    }
+  }
 }
 
 function toast(message) {
@@ -184,11 +216,14 @@ document.querySelector("#recordForm").addEventListener("submit", async (event) =
   event.preventDefault();
   const form = event.currentTarget;
   const payload = Object.fromEntries(new FormData(form));
+  if (payload.asset_id && payload.asset_id.includes(" — ")) {
+    payload.asset_id = payload.asset_id.split(" — ")[0];
+  }
   try {
     await AssetAPI.request(`create_${form.dataset.module}`, payload);
     document.querySelector("#modal").hidden = true;
     form.reset();
-    toast(window.ASET_CONFIG.USE_DEMO_DATA ? "Rekod demo berjaya disimpan." : "Rekod berjaya disimpan ke Google Sheets.");
+    toast(window.ASET_CONFIG.USE_DEMO_DATA ? "Rekod demo disimpan. Dashboard akan dikemas kini." : "Rekod berjaya disimpan ke Google Sheets.");
   } catch (error) { toast(error.message); }
 });
 document.querySelector("#menuButton").addEventListener("click", () => document.querySelector("#sidebar").classList.toggle("open"));
